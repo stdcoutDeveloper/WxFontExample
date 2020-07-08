@@ -45,13 +45,11 @@ namespace WxFont
     public:
         explicit FontPanel(wxWindow* parent) : wxPanel(parent)
         {
-            m_useFamily =
-                m_useNumericWeight = false;
+            m_useFamily = m_useNumericWeight = false;
 
-            m_textFaceName = new wxTextCtrl(this, wxID_ANY, wxString(),
-                                            wxDefaultPosition, wxDefaultSize,
+            m_textFaceName = new wxTextCtrl(this, wxID_ANY, wxString(), wxDefaultPosition, wxDefaultSize,
                                             wxTE_PROCESS_ENTER);
-            m_textFaceName->Bind(wxEVT_TEXT, &FontPanel::OnFacename, this);
+            m_textFaceName->Bind(wxEVT_TEXT, &FontPanel::OnFacename, this); // dynamic handling event
 
             // Must be in sync with the Family enum.
             const wxString familiesNames[] =
@@ -64,15 +62,12 @@ namespace WxFont
                 "Modern",
                 "Teletype",
             };
-            m_choiceFamily = new wxChoice(this, wxID_ANY,
-                                          wxDefaultPosition, wxDefaultSize,
-                                          WXSIZEOF(familiesNames), familiesNames);
+            m_choiceFamily = new wxChoice(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, WXSIZEOF(familiesNames),
+                                          familiesNames);
             m_choiceFamily->Bind(wxEVT_CHOICE, &FontPanel::OnFamily, this);
 
-            m_spinPointSize = new wxSpinCtrlDouble(this, wxID_ANY, wxString(),
-                                                   wxDefaultPosition, wxDefaultSize,
-                                                   wxSP_ARROW_KEYS,
-                                                   1.0, 100.0, 10.0, 0.1);
+            m_spinPointSize = new wxSpinCtrlDouble(this, wxID_ANY, wxString(), wxDefaultPosition, wxDefaultSize,
+                                                   wxSP_ARROW_KEYS, 1.0, 100.0, 10.0, 0.1);
 
             m_spinPointSize->SetInitialSize
             (
@@ -87,9 +82,8 @@ namespace WxFont
                 "Slant",
             };
 
-            m_choiceStyle = new wxChoice(this, wxID_ANY,
-                                         wxDefaultPosition, wxDefaultSize,
-                                         WXSIZEOF(stylesNames), stylesNames);
+            m_choiceStyle = new wxChoice(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, WXSIZEOF(stylesNames),
+                                         stylesNames);
 
             // Must be in sync with the Weight enum.
             const wxString weightsNames[] =
@@ -106,14 +100,11 @@ namespace WxFont
                 "Extra heavy",
             };
 
-            m_choiceWeight = new wxChoice(this, wxID_ANY,
-                                          wxDefaultPosition, wxDefaultSize,
-                                          WXSIZEOF(weightsNames), weightsNames);
+            m_choiceWeight = new wxChoice(this, wxID_ANY, wxDefaultPosition, wxDefaultSize, WXSIZEOF(weightsNames),
+                                          weightsNames);
             m_choiceWeight->Bind(wxEVT_CHOICE, &FontPanel::OnWeightChoice, this);
 
-            m_spinWeight = new wxSpinCtrl(this, wxID_ANY, wxString(),
-                                          wxDefaultPosition, wxDefaultSize,
-                                          wxSP_ARROW_KEYS,
+            m_spinWeight = new wxSpinCtrl(this, wxID_ANY, wxString(), wxDefaultPosition, wxDefaultSize, wxSP_ARROW_KEYS,
                                           1, wxFONTWEIGHT_MAX);
             m_spinWeight->SetInitialSize
             (
@@ -127,7 +118,6 @@ namespace WxFont
             m_checkFixedWidth->Disable(); // Can't be changed by the user.
 
             m_labelInfo = new wxStaticText(this, wxID_ANY, "\n\n\n");
-
 
             const int border = wxSizerFlags::GetDefaultBorder();
 
@@ -150,7 +140,6 @@ namespace WxFont
                        wxSizerFlags().DoubleBorder(wxLEFT).CentreVertical());
             sizer->Add(m_spinPointSize, flagsValue);
 
-
             sizer->Add(new wxStaticText(this, wxID_ANY, "&Style:"), flagsLabel);
             sizer->Add(m_choiceStyle, flagsValue);
 
@@ -161,7 +150,6 @@ namespace WxFont
 
             sizer->Add(new wxStaticText(this, wxID_ANY, "or &raw value:"), flagsLabel);
             sizer->Add(m_spinWeight, flagsValue);
-
 
             sizer->Add(new wxStaticText(this, wxID_ANY, "&Underlined:"), flagsLabel);
             sizer->Add(m_checkUnderlined, flagsValue);
@@ -176,8 +164,7 @@ namespace WxFont
 
             wxSizer* const sizerTop = new wxBoxSizer(wxVERTICAL);
             sizerTop->Add(sizer, wxSizerFlags().Expand().Border(wxBOTTOM));
-            sizerTop->Add(new wxButton(this, wxID_APPLY, "&Apply changes"),
-                          wxSizerFlags().Border(wxBOTTOM).Centre());
+            sizerTop->Add(new wxButton(this, wxID_APPLY, "&Apply changes"), wxSizerFlags().Border(wxBOTTOM).Centre());
             sizerTop->Add(m_labelInfo, wxSizerFlags().Expand().Border(wxTOP));
             SetSizer(sizerTop);
 
@@ -227,9 +214,7 @@ namespace WxFont
                 break;
             }
 
-            info.Weight(m_useNumericWeight
-                            ? m_spinWeight->GetValue()
-                            : (m_choiceWeight->GetSelection() + 1) * 100);
+            info.Weight(m_useNumericWeight ? m_spinWeight->GetValue() : (m_choiceWeight->GetSelection() + 1) * 100);
 
             if (m_checkUnderlined->GetValue())
                 info.Underlined();
@@ -297,9 +282,11 @@ namespace WxFont
             Style style = Style_Normal;
             switch (m_font.GetStyle())
             {
-            case wxFONTSTYLE_ITALIC: style = Style_Italic;
+            case wxFONTSTYLE_ITALIC:
+                style = Style_Italic;
                 break;
-            case wxFONTSTYLE_SLANT: style = Style_Slant;
+            case wxFONTSTYLE_SLANT:
+                style = Style_Slant;
                 break;
 
             case wxFONTSTYLE_NORMAL:
@@ -311,23 +298,32 @@ namespace WxFont
             Weight weight = Weight_Normal;
             switch (m_font.GetWeight())
             {
-            case wxFONTWEIGHT_THIN: weight = Weight_Thin;
+            case wxFONTWEIGHT_THIN:
+                weight = Weight_Thin;
                 break;
-            case wxFONTWEIGHT_EXTRALIGHT: weight = Weight_Extralight;
+            case wxFONTWEIGHT_EXTRALIGHT:
+                weight = Weight_Extralight;
                 break;
-            case wxFONTWEIGHT_LIGHT: weight = Weight_Light;
+            case wxFONTWEIGHT_LIGHT:
+                weight = Weight_Light;
                 break;
-            case wxFONTWEIGHT_MEDIUM: weight = Weight_Medium;
+            case wxFONTWEIGHT_MEDIUM:
+                weight = Weight_Medium;
                 break;
-            case wxFONTWEIGHT_SEMIBOLD: weight = Weight_Semibold;
+            case wxFONTWEIGHT_SEMIBOLD:
+                weight = Weight_Semibold;
                 break;
-            case wxFONTWEIGHT_BOLD: weight = Weight_Bold;
+            case wxFONTWEIGHT_BOLD:
+                weight = Weight_Bold;
                 break;
-            case wxFONTWEIGHT_EXTRABOLD: weight = Weight_Extrabold;
+            case wxFONTWEIGHT_EXTRABOLD:
+                weight = Weight_Extrabold;
                 break;
-            case wxFONTWEIGHT_HEAVY: weight = Weight_Heavy;
+            case wxFONTWEIGHT_HEAVY:
+                weight = Weight_Heavy;
                 break;
-            case wxFONTWEIGHT_EXTRAHEAVY: weight = Weight_Extraheavy;
+            case wxFONTWEIGHT_EXTRAHEAVY:
+                weight = Weight_Extraheavy;
                 break;
 
             case wxFONTWEIGHT_NORMAL:

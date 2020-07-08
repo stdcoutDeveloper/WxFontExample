@@ -2,6 +2,7 @@
 
 #include <Windows.h>
 #include "resource.h"
+#include "Commons.h"
 
 /**
  * \brief
@@ -16,20 +17,20 @@ namespace WxFont
         {
             auto hModuleRes = GetModuleHandle(nullptr);
 
-            auto res = FindResource(hModuleRes, MAKEINTRESOURCE(IDR_WX_PRIVATE_FONT), RT_FONT);
+            auto res = FindResource(hModuleRes, MAKEINTRESOURCE(IDR_WX_PRIVATE_FONT), L"BINARY");
             if (res)
             {
+                auto size = SizeofResource(hModuleRes, res);
                 auto handleDataRes = LoadResource(hModuleRes, res);
                 auto data = LockResource(handleDataRes);
-                auto size = SizeofResource(hModuleRes, res);
 
-                DWORD numbFonts;
-                auto fontHandle = AddFontMemResourceEx(data, size, nullptr, &numbFonts);
+                auto path = GetCurrentExeFilePath() + L"\\wxprivate.ttf";
+                DWORD dwBytesWritten = 0;
 
-                if (!fontHandle)
-                {
-                    // failed to load font resource.
-                }
+                auto hFile = CreateFile(path.c_str(), GENERIC_WRITE, 0, nullptr, CREATE_NEW, FILE_ATTRIBUTE_NORMAL,
+                                        nullptr);
+                auto rc = WriteFile(hFile, data, size, &dwBytesWritten, nullptr);
+                CloseHandle(hFile); // important!!! finish writing file.
             }
         }
 

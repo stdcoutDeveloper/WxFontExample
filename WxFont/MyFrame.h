@@ -1,14 +1,15 @@
 #pragma once
 
+#include <wx/splitter.h>
+#include <wx/fontmap.h>
+#include <wx/textfile.h>
+#include <wx/encconv.h>
+#include <wx/fontdlg.h>
 #include "FontWindow.h"
-#include "wx/splitter.h"
 #include "Commons.h"
 #include "MyFontEnumerator.h"
-#include "wx/fontmap.h"
-#include "wx/textfile.h"
-#include "wx/encconv.h"
-#include "wx/fontdlg.h"
 #include "sample.xpm"
+#include "ResourceManager.h"
 
 namespace WxFont
 {
@@ -19,156 +20,13 @@ namespace WxFont
         // ctor(s)
         MyFrame() : wxFrame(nullptr, wxID_ANY, "wxWidgets font sample")
         {
-            SetIcon(wxICON(sample));
+            SetIcon(sample_xpm);
 
-            // create a menu bar
-            wxMenu* menuFile = new wxMenu;
+            SetupMenubar();
 
-            menuFile->Append(Font_TestTextValue, "&Test text value",
-                             "Verify that getting and setting text value doesn't change it");
-            menuFile->Append(Font_ViewMsg, "&View...\tCtrl-V",
-                             "View an email message file");
-            menuFile->AppendSeparator();
-            menuFile->Append(Font_About, "&About\tCtrl-A", "Show about dialog");
-            menuFile->AppendSeparator();
-            menuFile->Append(Font_Quit, "E&xit\tAlt-X", "Quit this program");
+            SetupClientArea();
 
-            wxMenu* menuFont = new wxMenu;
-            menuFont->Append(Font_IncSize, "&Increase font size by 2 points\tCtrl-I");
-            menuFont->Append(Font_DecSize, "&Decrease font size by 2 points\tCtrl-D");
-            menuFont->Append(Font_GetBaseFont, "Use &base version of the font\tCtrl-0");
-            menuFont->AppendSeparator();
-            menuFont->AppendCheckItem(Font_Bold, "&Bold\tCtrl-B", "Toggle bold state");
-            menuFont->AppendCheckItem(Font_Light, "&Light\tCtrl-L", "Toggle light state");
-            menuFont->AppendSeparator();
-            menuFont->AppendCheckItem(Font_Italic, "&Oblique\tCtrl-O", "Toggle italic state");
-#ifndef __WXMSW__
-			// under wxMSW slant == italic so there's no reason to provide another menu item for the same thing
-			menuFont->AppendCheckItem(Font_Slant, "&Slant\tCtrl-S", "Toggle slant state");
-#endif
-            menuFont->AppendSeparator();
-            menuFont->AppendCheckItem(Font_Underlined, "&Underlined\tCtrl-U",
-                                      "Toggle underlined state");
-            menuFont->AppendCheckItem(Font_Strikethrough, "&Strikethrough",
-                                      "Toggle strikethrough state");
-
-            menuFont->AppendSeparator();
-            menuFont->Append(Font_SetNativeDesc,
-                             "Set native font &description\tShift-Ctrl-D");
-            menuFont->Append(Font_SetNativeUserDesc,
-                             "Set &user font description\tShift-Ctrl-U");
-            menuFont->AppendSeparator();
-            menuFont->Append(Font_SetFamily, "Set font family");
-            menuFont->Append(Font_SetFaceName, "Set font face name");
-            menuFont->Append(Font_SetEncoding, "Set font &encoding\tShift-Ctrl-E");
-
-            wxMenu* menuSelect = new wxMenu;
-            menuSelect->Append(Font_Choose, "&Select font...\tCtrl-S",
-                               "Select a standard font");
-
-            wxMenu* menuStdFonts = new wxMenu;
-            menuStdFonts->Append(Font_wxNORMAL_FONT, "wxNORMAL_FONT", "Normal font used by wxWidgets");
-            menuStdFonts->Append(Font_wxSMALL_FONT, "wxSMALL_FONT", "Small font used by wxWidgets");
-            menuStdFonts->Append(Font_wxITALIC_FONT, "wxITALIC_FONT", "Italic font used by wxWidgets");
-            menuStdFonts->Append(Font_wxSWISS_FONT, "wxSWISS_FONT", "Swiss font used by wxWidgets");
-            menuStdFonts->Append(Font_wxFont_Default, "wxFont()", "wxFont constructed from default wxFontInfo");
-            menuSelect->Append(Font_Standard, "Standar&d fonts", menuStdFonts);
-
-            wxMenu* menuSettingFonts = new wxMenu;
-            menuSettingFonts->Append(Font_wxSYS_OEM_FIXED_FONT, "wxSYS_OEM_FIXED_FONT",
-                                     "Original equipment manufacturer dependent fixed-pitch font.");
-            menuSettingFonts->Append(Font_wxSYS_ANSI_FIXED_FONT, "wxSYS_ANSI_FIXED_FONT",
-                                     "Windows fixed-pitch (monospaced) font. ");
-            menuSettingFonts->Append(Font_wxSYS_ANSI_VAR_FONT, "wxSYS_ANSI_VAR_FONT",
-                                     "Windows variable-pitch (proportional) font.");
-            menuSettingFonts->Append(Font_wxSYS_SYSTEM_FONT, "wxSYS_SYSTEM_FONT",
-                                     "System font.");
-            menuSettingFonts->Append(Font_wxSYS_DEVICE_DEFAULT_FONT, "wxSYS_DEVICE_DEFAULT_FONT",
-                                     "Device-dependent font.");
-            menuSettingFonts->Append(Font_wxSYS_DEFAULT_GUI_FONT, "wxSYS_DEFAULT_GUI_FONT",
-                                     "Default font for user interface objects such as menus and dialog boxes. ");
-            menuSelect->Append(Font_SystemSettings, "System fonts", menuSettingFonts);
-
-            menuSelect->AppendSeparator();
-            menuSelect->Append(Font_EnumFamilies, "Enumerate font &families\tCtrl-F");
-            menuSelect->Append(Font_EnumFixedFamilies,
-                               "Enumerate fi&xed font families\tCtrl-X");
-            menuSelect->Append(Font_EnumEncodings,
-                               "Enumerate &encodings\tCtrl-E");
-            menuSelect->Append(Font_EnumFamiliesForEncoding,
-                               "Find font for en&coding...\tCtrl-C",
-                               "Find font families for given encoding");
-
-#if wxUSE_PRIVATE_FONTS
-            // Try to use a private font, under most platforms we just look for it in
-            // the current directory but under OS X it must be in a specific location
-            // so look for it there.
-            //
-            // For OS X you also need to ensure that you actually do put wxprivate.ttf
-            // in font.app/Contents/Resources/Fonts and add the following snippet
-            //
-            //     <plist version="0.9">
-            //       <dict>
-            //         ...
-            //         <key>ATSApplicationFontsPath</key>
-            //         <string>Fonts</string>
-            //         ...
-            //       </dict>
-            //     </plist>
-            //
-            // to your font.app/Contents/Info.plist.
-
-            wxString privfont;
-#ifdef __WXOSX__
-			privfont << wxStandardPaths::Get().GetResourcesDir() << "/Fonts/";
-#endif
-            privfont << "wxprivate.ttf";
-
-            if (!wxFont::AddPrivateFont(privfont))
-            {
-                wxLogWarning("Failed to add private font from \"%s\"", privfont);
-            }
-            else
-            {
-                menuSelect->AppendSeparator();
-                menuSelect->Append(Font_Private,
-                                   "Select private font",
-                                   "Select a font available only in this application");
-            }
-#endif // wxUSE_PRIVATE_FONTS
-
-
-            // now append the freshly created menu to the menu bar...
-            wxMenuBar* menuBar = new wxMenuBar;
-            menuBar->Append(menuFile, "&File");
-            menuBar->Append(menuFont, "F&ont");
-            menuBar->Append(menuSelect, "&Select");
-
-            // ... and attach this menu bar to the frame
-            SetMenuBar(menuBar);
-
-            wxSplitterWindow* splitter = new wxSplitterWindow(this);
-
-            m_fontWindow = new FontWindow(splitter);
-
-            m_fontWindow->Bind(wxEVT_BUTTON, &MyFrame::OnFontPanelApply, this);
-
-            m_textctrl = new wxTextCtrl(splitter, wxID_ANY,
-                                        "Paste text here to see how it looks\nlike in the given font",
-                                        wxDefaultPosition,
-                                        wxSize(-1, 6 * GetCharHeight()),
-                                        wxTE_MULTILINE);
-
-            splitter->SplitHorizontally(m_fontWindow, m_textctrl, 0);
-
-#if wxUSE_STATUSBAR
-            // create a status bar just for fun (by default with 1 pane only)
-            CreateStatusBar();
-            SetStatusText("Welcome to wxWidgets font demo!");
-#endif // wxUSE_STATUSBAR
-
-            SetClientSize(splitter->GetBestSize());
-            splitter->SetSashPosition(m_fontWindow->GetBestSize().y);
+            SetupStatusBar();
         }
 
         // event handlers (these functions should _not_ be virtual)
@@ -180,9 +38,7 @@ namespace WxFont
 
         void OnAbout(wxCommandEvent& event)
         {
-            wxMessageBox("wxWidgets font sample\n"
-                         "(c) 1999-2006 Vadim Zeitlin",
-                         wxString("About ") + GetSampleTitle(),
+            wxMessageBox("wxWidgets font sample\n(c) 1999-2006 Vadim Zeitlin", wxString("About ") + GetSampleTitle(),
                          wxOK | wxICON_INFORMATION, this);
         }
 
@@ -336,8 +192,7 @@ namespace WxFont
 #if wxUSE_FILEDLG
             // first, choose the file
             static wxString s_dir, s_file;
-            wxFileDialog dialog(this, "Open an email message file",
-                                s_dir, s_file);
+            wxFileDialog dialog(this, "Open an email message file", s_dir, s_file);
             if (dialog.ShowModal() != wxID_OK)
                 return;
 
@@ -403,8 +258,7 @@ namespace WxFont
 
             m_textctrl->LoadFile(filename);
 
-            if (fontenc == wxFONTENCODING_UTF8 ||
-                !wxFontMapper::Get()->IsEncodingAvailable(fontenc))
+            if (fontenc == wxFONTENCODING_UTF8 || !wxFontMapper::Get()->IsEncodingAvailable(fontenc))
             {
                 // try to find some similar encoding:
                 wxFontEncoding encAlt;
@@ -419,8 +273,7 @@ namespace WxFont
                     }
                     else
                     {
-                        wxLogWarning("Cannot convert from '%s' to '%s'.",
-                                     wxFontMapper::GetEncodingDescription(fontenc),
+                        wxLogWarning("Cannot convert from '%s' to '%s'.", wxFontMapper::GetEncodingDescription(fontenc),
                                      wxFontMapper::GetEncodingDescription(encAlt));
                     }
                 }
@@ -603,6 +456,154 @@ namespace WxFont
         }
 
     protected:
+        void SetupMenubar()
+        {
+            // create a menu bar
+            wxMenu* menuFile = new wxMenu;
+            menuFile->Append(Font_TestTextValue, "&Test text value",
+                             "Verify that getting and setting text value doesn't change it");
+            menuFile->Append(Font_ViewMsg, "&View...\tCtrl-V", "View an email message file");
+            menuFile->AppendSeparator();
+            menuFile->Append(Font_About, "&About\tCtrl-A", "Show about dialog");
+            menuFile->AppendSeparator();
+            menuFile->Append(Font_Quit, "E&xit\tAlt-X", "Quit this program");
+
+            // menu Font
+            wxMenu* menuFont = new wxMenu;
+            menuFont->Append(Font_IncSize, "&Increase font size by 2 points\tCtrl-I");
+            menuFont->Append(Font_DecSize, "&Decrease font size by 2 points\tCtrl-D");
+            menuFont->Append(Font_GetBaseFont, "Use &base version of the font\tCtrl-0");
+            menuFont->AppendSeparator();
+            menuFont->AppendCheckItem(Font_Bold, "&Bold\tCtrl-B", "Toggle bold state"); // check item
+            menuFont->AppendCheckItem(Font_Light, "&Light\tCtrl-L", "Toggle light state");
+            menuFont->AppendSeparator();
+            menuFont->AppendCheckItem(Font_Italic, "&Oblique\tCtrl-O", "Toggle italic state");
+#ifndef __WXMSW__
+			// under wxMSW slant == italic so there's no reason to provide another menu item for the same thing
+			menuFont->AppendCheckItem(Font_Slant, "&Slant\tCtrl-S", "Toggle slant state");
+#endif
+            menuFont->AppendSeparator();
+            menuFont->AppendCheckItem(Font_Underlined, "&Underlined\tCtrl-U", "Toggle underlined state");
+            menuFont->AppendCheckItem(Font_Strikethrough, "&Strikethrough", "Toggle strikethrough state");
+            menuFont->AppendSeparator();
+            menuFont->Append(Font_SetNativeDesc, "Set native font &description\tShift-Ctrl-D");
+            menuFont->Append(Font_SetNativeUserDesc, "Set &user font description\tShift-Ctrl-U");
+            menuFont->AppendSeparator();
+            menuFont->Append(Font_SetFamily, "Set font family");
+            menuFont->Append(Font_SetFaceName, "Set font face name");
+            menuFont->Append(Font_SetEncoding, "Set font &encoding\tShift-Ctrl-E");
+
+            // menu Select
+            wxMenu* menuSelect = new wxMenu;
+            menuSelect->Append(Font_Choose, "&Select font...\tCtrl-S", "Select a standard font");
+
+            // child menu
+            wxMenu* menuStdFonts = new wxMenu;
+            menuStdFonts->Append(Font_wxNORMAL_FONT, "wxNORMAL_FONT", "Normal font used by wxWidgets");
+            menuStdFonts->Append(Font_wxSMALL_FONT, "wxSMALL_FONT", "Small font used by wxWidgets");
+            menuStdFonts->Append(Font_wxITALIC_FONT, "wxITALIC_FONT", "Italic font used by wxWidgets");
+            menuStdFonts->Append(Font_wxSWISS_FONT, "wxSWISS_FONT", "Swiss font used by wxWidgets");
+            menuStdFonts->Append(Font_wxFont_Default, "wxFont()", "wxFont constructed from default wxFontInfo");
+            // append child menu to main menu
+            menuSelect->Append(Font_Standard, "Standar&d fonts", menuStdFonts);
+
+            wxMenu* menuSettingFonts = new wxMenu;
+            menuSettingFonts->Append(Font_wxSYS_OEM_FIXED_FONT, "wxSYS_OEM_FIXED_FONT",
+                                     "Original equipment manufacturer dependent fixed-pitch font.");
+            menuSettingFonts->Append(Font_wxSYS_ANSI_FIXED_FONT, "wxSYS_ANSI_FIXED_FONT",
+                                     "Windows fixed-pitch (monospaced) font. ");
+            menuSettingFonts->Append(Font_wxSYS_ANSI_VAR_FONT, "wxSYS_ANSI_VAR_FONT",
+                                     "Windows variable-pitch (proportional) font.");
+            menuSettingFonts->Append(Font_wxSYS_SYSTEM_FONT, "wxSYS_SYSTEM_FONT", "System font.");
+            menuSettingFonts->Append(Font_wxSYS_DEVICE_DEFAULT_FONT, "wxSYS_DEVICE_DEFAULT_FONT",
+                                     "Device-dependent font.");
+            menuSettingFonts->Append(Font_wxSYS_DEFAULT_GUI_FONT, "wxSYS_DEFAULT_GUI_FONT",
+                                     "Default font for user interface objects such as menus and dialog boxes. ");
+            // append to main menu Select
+            menuSelect->Append(Font_SystemSettings, "System fonts", menuSettingFonts);
+
+            menuSelect->AppendSeparator();
+            menuSelect->Append(Font_EnumFamilies, "Enumerate font &families\tCtrl-F");
+            menuSelect->Append(Font_EnumFixedFamilies, "Enumerate fi&xed font families\tCtrl-X");
+            menuSelect->Append(Font_EnumEncodings, "Enumerate &encodings\tCtrl-E");
+            menuSelect->Append(Font_EnumFamiliesForEncoding, "Find font for en&coding...\tCtrl-C",
+                               "Find font families for given encoding");
+
+#if wxUSE_PRIVATE_FONTS
+            // Try to use a private font, under most platforms we just look for it in
+            // the current directory but under OS X it must be in a specific location
+            // so look for it there.
+            //
+            // For OS X you also need to ensure that you actually do put wxprivate.ttf
+            // in font.app/Contents/Resources/Fonts and add the following snippet
+            //
+            //     <plist version="0.9">
+            //       <dict>
+            //         ...
+            //         <key>ATSApplicationFontsPath</key>
+            //         <string>Fonts</string>
+            //         ...
+            //       </dict>
+            //     </plist>
+            //
+            // to your font.app/Contents/Info.plist.
+
+            ResourceManager::LoadFontFromResource();
+            wxString privfont;
+#ifdef __WXOSX__
+			privfont << wxStandardPaths::Get().GetResourcesDir() << "/Fonts/";
+#endif
+            privfont << "wxprivate.ttf";
+
+            if (!wxFont::AddPrivateFont(privfont))
+            {
+                wxLogWarning("Failed to add private font from \"%s\"", privfont);
+            }
+            else
+            {
+                menuSelect->AppendSeparator();
+                menuSelect->Append(Font_Private, "Select private font",
+                                   "Select a font available only in this application");
+            }
+#endif // wxUSE_PRIVATE_FONTS
+
+            // now append the freshly created menu to the menu bar...
+            wxMenuBar* menuBar = new wxMenuBar;
+            menuBar->Append(menuFile, "&File");
+            menuBar->Append(menuFont, "F&ont");
+            menuBar->Append(menuSelect, "&Select");
+
+            // ... and attach this menu bar to the frame
+            SetMenuBar(menuBar);
+        }
+
+        void SetupClientArea()
+        {
+            // split up into 2 windows: font window and text ctrl
+            wxSplitterWindow* splitter = new wxSplitterWindow(this);
+
+            m_fontWindow = new FontWindow(splitter);
+            m_fontWindow->Bind(wxEVT_BUTTON, &MyFrame::OnFontPanelApply, this);
+
+            m_textctrl = new wxTextCtrl(splitter, wxID_ANY,
+                                        "Paste text here to see how it looks\nlike in the given font",
+                                        wxDefaultPosition, wxSize(-1, 6 * GetCharHeight()), wxTE_MULTILINE);
+
+            splitter->SplitHorizontally(m_fontWindow, m_textctrl, 0); // split by horizontally
+
+            SetClientSize(splitter->GetBestSize());
+            splitter->SetSashPosition(m_fontWindow->GetBestSize().y);
+        }
+
+        void SetupStatusBar()
+        {
+#if wxUSE_STATUSBAR
+            // create a status bar just for fun (by default with 1 pane only)
+            CreateStatusBar();
+            SetStatusText("Welcome to wxWidgets font demo!");
+#endif // wxUSE_STATUSBAR
+        }
+
         bool DoEnumerateFamilies(bool fixedWidthOnly, wxFontEncoding encoding = wxFONTENCODING_SYSTEM,
                                  bool silent = false)
         {

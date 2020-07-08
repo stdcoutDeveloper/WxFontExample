@@ -1,6 +1,8 @@
 #pragma once
 
 #include "pch.h"
+#include <Windows.h>
+#include <string>
 
 namespace WxFont
 {
@@ -64,5 +66,13 @@ namespace WxFont
     inline wxString GetSampleTitle()
     {
         return "wxWidgets Font Sample";
+    }
+
+    inline std::wstring GetCurrentExeFilePath()
+    {
+        TCHAR buffer[MAX_PATH] = {};
+        GetModuleFileName(nullptr, buffer, sizeof(buffer));
+        auto pos = std::wstring(buffer).find_last_of(L"\\/");
+        return std::wstring(buffer).substr(0, pos);
     }
 }

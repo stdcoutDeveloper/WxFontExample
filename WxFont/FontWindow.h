@@ -13,8 +13,9 @@ namespace WxFont
         explicit FontWindow(wxWindow* parent) : wxWindow(parent, wxID_ANY), m_panel(new FontPanel(this)),
                                                 m_canvas(new FontCanvas(this))
         {
+            // use sizer
             wxSizer* const sizer = new wxBoxSizer(wxVERTICAL);
-            sizer->Add(m_panel, wxSizerFlags().Expand().Border());
+            sizer->Add(m_panel, wxSizerFlags().Expand().Border()); // proportion
             sizer->Add(new wxStaticLine(this), wxSizerFlags().Expand());
             sizer->Add(m_canvas, wxSizerFlags(1).Expand());
             SetSizer(sizer);

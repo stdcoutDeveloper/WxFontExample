@@ -40,6 +40,9 @@
   <ItemGroup>
     <Font Include="Res\wxprivate.ttf" />
   </ItemGroup>
+  <ItemGroup>
+    <Image Include="Res\std.ico" />
+  </ItemGroup>
   <PropertyGroup Label="Globals">
     <VCProjectVersion>15.0</VCProjectVersion>
     <ProjectGuid>{C9BE6D2C-624C-447E-89A6-AFAA22E95E24}</ProjectGuid>

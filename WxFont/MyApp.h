@@ -20,15 +20,18 @@ namespace WxFont
                 return false;
 
             // Create the main application window
-            MyFrame* frame = new MyFrame();
+            frame_ = new MyFrame();
 
             // Show it
-            frame->Show(true);
+            frame_->Show(true);
 
             // success: wxApp::OnRun() will be called which will enter the main message
             // loop and the application will run. If we returned 'false' here, the
             // application would exit immediately.
             return true;
         }
+
+    private:
+        MyFrame* frame_;
     };
 }

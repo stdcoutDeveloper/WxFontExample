@@ -13,10 +13,25 @@ namespace WxFont
         }
 
         // accessors for FontWindow
-        const wxFont& GetTextFont() const { return m_font; }
-        const wxColour& GetColour() const { return m_colour; }
-        void SetTextFont(const wxFont& font) { m_font = font; }
-        void SetColour(const wxColour& colour) { m_colour = colour; }
+        const wxFont& GetTextFont() const
+        {
+            return m_font;
+        }
+
+        const wxColour& GetColour() const
+        {
+            return m_colour;
+        }
+
+        void SetTextFont(const wxFont& font)
+        {
+            m_font = font;
+        }
+
+        void SetColour(const wxColour& colour)
+        {
+            m_colour = colour;
+        }
 
         // event handlers
         void OnPaint(wxPaintEvent& event)
